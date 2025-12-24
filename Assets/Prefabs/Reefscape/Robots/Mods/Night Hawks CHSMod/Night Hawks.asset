@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   teamNumber: 614
   teamName: Night Hawks
-  robotPrefab: {fileID: 4108337974173178762, guid: 23d6ffb9927b7904ea49df0bfe293ecc,
+  robotPrefab: {fileID: 4108337974173178762, guid: 21f3112ee121b5f40a72a3af8707d13a,
     type: 3}
   robotPreloadGamePiece: {fileID: 2185987706872048638, guid: 970bdf84a203d9a4b8dc602974341a07,
     type: 3}

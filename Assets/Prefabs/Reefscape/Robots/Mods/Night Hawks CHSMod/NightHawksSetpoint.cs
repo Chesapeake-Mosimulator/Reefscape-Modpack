@@ -6,5 +6,7 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
     public class NightHawksSetpoint : ScriptableObject
     {
         [Tooltip("Inches")] public float elevatorHeight;
+        [Tooltip("Degrees")] public float armAngle;
+        [Tooltip("Degrees")] public float intakeAngle;
     }
 }

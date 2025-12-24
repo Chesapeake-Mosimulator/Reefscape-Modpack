@@ -14,9 +14,9 @@ In order from lowest team number to highest
 - 4638
 ### Planned
 - 686
+- 836
 ### Considering
 - 449
-- 836
 - 1629
 - 1727
 - 1731

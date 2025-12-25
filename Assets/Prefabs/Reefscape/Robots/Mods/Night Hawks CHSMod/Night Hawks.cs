@@ -20,6 +20,12 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
         [SerializeField] private GenericJoint Arm;
         [SerializeField] private GenericJoint Intake;
 
+        [Header("Physics Rollers")]
+        [SerializeField]
+        private GenericRoller[] intakeRollers;
+        [SerializeField] private float rollerTestVelocity;
+        private float EEv4PunchVelocity = 6000f;
+
         [Header("PIDS")]
         [SerializeField] private PidConstants ArmPid;
         [SerializeField] private PidConstants IntakePid;
@@ -100,6 +106,15 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
                 _algaeController.SetTargetState(algaeStowState);
                 _coralController.SetTargetState(endEffectorCoralStowState);
 
+                bool isPunchingAlgae = IntakeAction.IsPressed() && (CurrentSetpoint == ReefscapeSetpoints.LowAlgae || CurrentSetpoint == ReefscapeSetpoints.HighAlgae);
+
+                if (isPunchingAlgae)
+                {
+                    foreach (var roller in intakeRollers)
+                    {
+                        roller.ChangeAngularVelocity(EEv4PunchVelocity);
+                    }
+                }
 
                 switch (CurrentSetpoint)
                 {

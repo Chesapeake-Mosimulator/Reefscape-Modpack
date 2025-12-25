@@ -13,3 +13,5 @@ MonoBehaviour:
   m_Name: 614IntakeGroundAlgae
   m_EditorClassIdentifier: 
   elevatorHeight: 0
+  armAngle: 0
+  intakeAngle: -22.5

@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using Games.Reefscape.Enums;
 using Games.Reefscape.GamePieceSystem;
 using Games.Reefscape.Robots;
@@ -20,10 +22,14 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
         [SerializeField] private GenericJoint Arm;
         [SerializeField] private GenericJoint Intake;
 
+        [Header("Testing Variables")]
+        [SerializeField] private float rollerTestVelocity;
+        [SerializeField] private float hoverTransitionHeightTest;
+        [SerializeField] private float hoverTestHeight;
+
         [Header("Physics Rollers")]
         [SerializeField]
         private GenericRoller[] intakeRollers;
-        [SerializeField] private float rollerTestVelocity;
         private float EEv4PunchVelocity = 6000f;
 
         [Header("PIDS")]
@@ -62,6 +68,9 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
         private float _armTargetAngle;
         private float _intakeTargetAngle;
 
+        private float _hoverTransitionHeight;
+        private float _hoverHeight;
+
         private bool StationMode;
         private bool GroundMode;
 
@@ -75,6 +84,9 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
             _elevatorTargetHeight = 0;
             _armTargetAngle = 0;
             _intakeTargetAngle = 0;
+            _hoverTransitionHeight = hoverTransitionHeightTest;
+            _hoverHeight=hoverTestHeight;
+        
 
             RobotGamePieceController.SetPreload(endEffectorCoralStowState);
             _coralController = RobotGamePieceController.GetPieceByName(ReefscapeGamePieceType.Coral.ToString());
@@ -83,11 +95,11 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
             _coralController.gamePieceStates = new[] { endEffectorCoralStowState, endEffectorCoralIntakeState };
             _coralController.intakes.Add(endEffectorCoralIntake);
             _coralController.intakes.Add(intakeCoralIntake);
-
-
-            _algaeController.gamePieceStates = new[] { algaeStowState };
+            
+              _algaeController.gamePieceStates = new[] { algaeStowState };
             //_algaeController.intakes.Add(algaePunch);
 
+            StationMode = true;
         }
 
         private void LateUpdate()
@@ -99,64 +111,80 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
 
         private void FixedUpdate()
         {
+
+            //NightHawksHoverSequence();
+
+
+            bool hasAlgae = _algaeController.HasPiece();
+            bool hasCoral = _coralController.HasPiece();
+
+            _algaeController.SetTargetState(algaeStowState);
+            _coralController.SetTargetState(endEffectorCoralStowState);
+
+            bool isPunchingAlgae = IntakeAction.IsPressed() && (CurrentSetpoint == ReefscapeSetpoints.LowAlgae || CurrentSetpoint == ReefscapeSetpoints.HighAlgae);
+
+            if (isPunchingAlgae)
             {
-                bool hasAlgae = _algaeController.HasPiece();
-                bool hasCoral = _coralController.HasPiece();
-
-                _algaeController.SetTargetState(algaeStowState);
-                _coralController.SetTargetState(endEffectorCoralStowState);
-
-                bool isPunchingAlgae = IntakeAction.IsPressed() && (CurrentSetpoint == ReefscapeSetpoints.LowAlgae || CurrentSetpoint == ReefscapeSetpoints.HighAlgae);
-
-                if (isPunchingAlgae)
+                foreach (var roller in intakeRollers)
                 {
-                    foreach (var roller in intakeRollers)
-                    {
-                        roller.ChangeAngularVelocity(EEv4PunchVelocity);
-                    }
+                    roller.ChangeAngularVelocity(EEv4PunchVelocity);
                 }
-
-                switch (CurrentSetpoint)
-                {
-                    case ReefscapeSetpoints.Stow:
-                        SetSetpoint(stow);
-                        break;
-                    case ReefscapeSetpoints.Intake:
-                        SetSetpoint(hover);
-                        _coralController.RequestIntake(endEffectorCoralIntake, CurrentRobotMode == ReefscapeRobotMode.Coral && !hasCoral);
-                        break;
-                    case ReefscapeSetpoints.Place:
-                        PlacePiece();
-                        break;
-                    case ReefscapeSetpoints.L1:
-                        SetSetpoint(groundL1);
-                        break;
-                    case ReefscapeSetpoints.L2:
-                        SetSetpoint(l2);
-                        break;
-                    case ReefscapeSetpoints.LowAlgae:
-                        SetSetpoint(l2Punch);
-                        //_algaeController.RequestIntake(algaePunch, IntakeAction.IsPressed() && !hasAlgae);
-                        //_coralController.RequestIntake(endEffectorCoralIntake, false);
-                        break;
-                    case ReefscapeSetpoints.L3:
-                        SetSetpoint(l3);
-                        break;
-                    case ReefscapeSetpoints.HighAlgae:
-                        SetSetpoint(l3Punch);
-                        //_algaeController.RequestIntake(algaePunch, IntakeAction.IsPressed() && !hasAlgae);
-                        //_coralController.RequestIntake(endEffectorCoralIntake, false);
-                        break;
-                    case ReefscapeSetpoints.Processor:
-                        SetSetpoint(stow);
-                        break;
-                    case ReefscapeSetpoints.RobotSpecial:
-                        SetState(ReefscapeSetpoints.Stow);
-                        break;
-                }
-                UpdateSetpoints();
             }
 
+            switch (CurrentSetpoint)
+            {
+                case ReefscapeSetpoints.Stow:
+                    SetSetpoint(stow);
+                    break;
+                case ReefscapeSetpoints.Intake:
+                    StartCoroutine(NightHawksHoverSequence());
+                    _coralController.RequestIntake(endEffectorCoralIntake, CurrentRobotMode == ReefscapeRobotMode.Coral && !hasCoral);
+                    break;
+                case ReefscapeSetpoints.Place:
+                    PlacePiece();
+                    break;
+                case ReefscapeSetpoints.L1:
+                    SetSetpoint(groundL1);
+                    break;
+                case ReefscapeSetpoints.L2:
+                    SetSetpoint(l2);
+                    break;
+                case ReefscapeSetpoints.LowAlgae:
+                    SetSetpoint(l2Punch);
+                    //_algaeController.RequestIntake(algaePunch, IntakeAction.IsPressed() && !hasAlgae);
+                    //_coralController.RequestIntake(endEffectorCoralIntake, false);
+                    break;
+                case ReefscapeSetpoints.L3:
+                    SetSetpoint(l3);
+                    break;
+                case ReefscapeSetpoints.HighAlgae:
+                    SetSetpoint(l3Punch);
+                    //_algaeController.RequestIntake(algaePunch, IntakeAction.IsPressed() && !hasAlgae);
+                    //_coralController.RequestIntake(endEffectorCoralIntake, false);
+                    break;
+                case ReefscapeSetpoints.Processor:
+                    SetSetpoint(stow);
+                    break;
+                case ReefscapeSetpoints.RobotSpecial:
+                    SetState(ReefscapeSetpoints.Stow);
+                    break;
+            }
+            UpdateSetpoints();
+
+        }
+        
+        private float _armHoverAngle = 160;
+        private IEnumerator NightHawksHoverSequence()
+        {
+            if (IntakeAction.IsPressed() && StationMode == true)
+            {
+                _elevatorTargetHeight = _hoverTransitionHeight;
+                yield return new WaitForSeconds(0.5f);
+                _armTargetAngle = _armHoverAngle;
+                yield return new WaitForSeconds(1f);
+                _elevatorTargetHeight = _hoverHeight;
+            
+            }
         }
         private void PlacePiece()
         {

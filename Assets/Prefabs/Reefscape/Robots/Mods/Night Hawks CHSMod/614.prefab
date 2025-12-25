@@ -48257,9 +48257,11 @@ MonoBehaviour:
   elevator: {fileID: 2073225814927032716}
   Arm: {fileID: 1434608955360311447}
   Intake: {fileID: 3435474695169308487}
+  rollerTestVelocity: 0
+  hoverTransitionHeightTest: 22
+  hoverTestHeight: 18
   intakeRollers:
   - {fileID: 7559012576693266170}
-  rollerTestVelocity: 0
   ArmPid:
     kP: 4
     kI: 0

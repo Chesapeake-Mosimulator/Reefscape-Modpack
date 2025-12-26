@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a763cf2f23bfdc54482840658dde3243, type: 3}
   m_Name: 614L3Punch
   m_EditorClassIdentifier: 
-  elevatorHeight: 26
-  armAngle: 15
+  elevatorHeight: 27
+  armAngle: 45
   intakeAngle: -22.5

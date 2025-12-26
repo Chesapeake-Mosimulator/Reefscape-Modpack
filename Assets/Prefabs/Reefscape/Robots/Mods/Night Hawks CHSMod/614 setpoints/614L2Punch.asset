@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: 614L2Punch
   m_EditorClassIdentifier: 
   elevatorHeight: 11.75
-  armAngle: 20
+  armAngle: 45
   intakeAngle: -22.5

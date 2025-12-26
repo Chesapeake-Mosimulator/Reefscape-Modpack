@@ -31,6 +31,7 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
         [SerializeField]
         private GenericRoller[] intakeRollers;
         private float EEv4PunchVelocity = 6000f;
+        private float CanalIntakeVelocity; 
 
         [Header("PIDS")]
         [SerializeField] private PidConstants ArmPid;
@@ -68,8 +69,8 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
         private float _armTargetAngle;
         private float _intakeTargetAngle;
 
-        private float _hoverTransitionHeight;
-        private float _hoverHeight;
+        
+        
 
         private bool StationMode;
         private bool GroundMode;
@@ -84,8 +85,8 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
             _elevatorTargetHeight = 0;
             _armTargetAngle = 0;
             _intakeTargetAngle = 0;
-            _hoverTransitionHeight = hoverTransitionHeightTest;
-            _hoverHeight=hoverTestHeight;
+            //_hoverTransitionHeight = hoverTransitionHeightTest;
+            //_hoverHeight=hoverTestHeight;
         
 
             RobotGamePieceController.SetPreload(endEffectorCoralStowState);
@@ -131,6 +132,22 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
                 }
             }
 
+            bool isHovering= IntakeAction.IsPressed() && CurrentSetpoint== ReefscapeSetpoints.Intake;
+            
+            if (isHovering)
+            {
+                foreach (var canalRoller in intakeRollers) //need a new canal field bc it interferes with the punch roller and causes the arm to wig out
+                {
+                    canalRoller.ChangeAngularVelocity(rollerTestVelocity);
+                }
+            }
+            else
+            {
+                foreach (var canalRoller in intakeRollers)
+                {
+                    canalRoller.ChangeAngularVelocity(0);
+                }
+            }
             switch (CurrentSetpoint)
             {
                 case ReefscapeSetpoints.Stow:
@@ -172,8 +189,10 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
             UpdateSetpoints();
 
         }
-        
+        private float _hoverTransitionHeight=22;
         private float _armHoverAngle = 160;
+        private float _hoverHeight=16;
+
         private IEnumerator NightHawksHoverSequence()
         {
             if (IntakeAction.IsPressed() && StationMode == true)
@@ -183,7 +202,6 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
                 _armTargetAngle = _armHoverAngle;
                 yield return new WaitForSeconds(1f);
                 _elevatorTargetHeight = _hoverHeight;
-            
             }
         }
         private void PlacePiece()

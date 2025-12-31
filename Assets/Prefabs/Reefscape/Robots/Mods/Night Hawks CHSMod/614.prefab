@@ -48546,13 +48546,14 @@ MonoBehaviour:
   rollerTestVelocity: 4000
   hoverTransitionHeightTest: 22
   hoverTestHeight: 18
-  intakeRollers:
-  - {fileID: 7559012576693266170}
+  canalRollers:
   - {fileID: 4007895231178736526}
   - {fileID: 7490223501649423128}
   - {fileID: 142413983864946215}
   - {fileID: 4973323848442204626}
   - {fileID: 3267924663321262682}
+  EndEffectorRollers:
+  - {fileID: 7559012576693266170}
   ArmPid:
     kP: 4
     kI: 0
@@ -74518,7 +74519,7 @@ HingeJoint:
     spring: 0
     damper: 0
     targetPosition: 0
-  m_UseMotor: 0
+  m_UseMotor: 1
   m_Motor:
     targetVelocity: 0
     force: 3.4028233e+38

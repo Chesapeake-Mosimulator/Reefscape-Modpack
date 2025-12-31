@@ -7,6 +7,7 @@ using MoSimCore.BaseClasses.GameManagement;
 using MoSimCore.Enums;
 using MoSimLib;
 using RobotFramework.Components;
+using RobotFramework.Controllers.Drivetrain;
 using RobotFramework.Controllers.GamePieceSystem;
 using RobotFramework.Controllers.PidSystems;
 using RobotFramework.Enums;
@@ -28,10 +29,10 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
         [SerializeField] private float hoverTestHeight;
 
         [Header("Physics Rollers")]
-        [SerializeField]
-        private GenericRoller[] intakeRollers;
+        [SerializeField] private GenericRoller[] canalRollers;
+        [SerializeField] private GenericRoller[] EndEffectorRollers;
         private float EEv4PunchVelocity = 6000f;
-        private float CanalIntakeVelocity; 
+        private float CanalIntakeVelocity;
 
         [Header("PIDS")]
         [SerializeField] private PidConstants ArmPid;
@@ -69,8 +70,11 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
         private float _armTargetAngle;
         private float _intakeTargetAngle;
 
-        
-        
+        private bool preAligned;
+        private ReefscapeAutoAlign align;
+
+
+
 
         private bool StationMode;
         private bool GroundMode;
@@ -87,7 +91,7 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
             _intakeTargetAngle = 0;
             //_hoverTransitionHeight = hoverTransitionHeightTest;
             //_hoverHeight=hoverTestHeight;
-        
+
 
             RobotGamePieceController.SetPreload(endEffectorCoralStowState);
             _coralController = RobotGamePieceController.GetPieceByName(ReefscapeGamePieceType.Coral.ToString());
@@ -96,11 +100,14 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
             _coralController.gamePieceStates = new[] { endEffectorCoralStowState, endEffectorCoralIntakeState };
             _coralController.intakes.Add(endEffectorCoralIntake);
             _coralController.intakes.Add(intakeCoralIntake);
-            
-              _algaeController.gamePieceStates = new[] { algaeStowState };
+
+            _algaeController.gamePieceStates = new[] { algaeStowState };
             //_algaeController.intakes.Add(algaePunch);
 
             StationMode = true;
+
+            align = gameObject.GetComponent<ReefscapeAutoAlign>();
+            preAligned = false;
         }
 
         private void LateUpdate()
@@ -113,8 +120,8 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
         private void FixedUpdate()
         {
 
-            //NightHawksHoverSequence();
 
+           AutoAlignOffsets();
 
             bool hasAlgae = _algaeController.HasPiece();
             bool hasCoral = _coralController.HasPiece();
@@ -126,24 +133,24 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
 
             if (isPunchingAlgae)
             {
-                foreach (var roller in intakeRollers)
+                foreach (var roller in EndEffectorRollers)
                 {
                     roller.ChangeAngularVelocity(EEv4PunchVelocity);
                 }
             }
 
-            bool isHovering= IntakeAction.IsPressed() && CurrentSetpoint== ReefscapeSetpoints.Intake;
-            
+            bool isHovering = IntakeAction.IsPressed() && CurrentSetpoint == ReefscapeSetpoints.Intake;
+
             if (isHovering)
             {
-                foreach (var canalRoller in intakeRollers) //need a new canal field bc it interferes with the punch roller and causes the arm to wig out
+                foreach (var canalRoller in canalRollers) //need a new canal field bc it interferes with the punch roller and causes the arm to wig out
                 {
                     canalRoller.ChangeAngularVelocity(rollerTestVelocity);
                 }
             }
             else
             {
-                foreach (var canalRoller in intakeRollers)
+                foreach (var canalRoller in canalRollers)
                 {
                     canalRoller.ChangeAngularVelocity(0);
                 }
@@ -154,7 +161,8 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
                     SetSetpoint(stow);
                     break;
                 case ReefscapeSetpoints.Intake:
-                    StartCoroutine(NightHawksHoverSequence());
+                    //StartCoroutine(NightHawksHoverSequence());
+                    SetSetpoint(hover);
                     _coralController.RequestIntake(endEffectorCoralIntake, CurrentRobotMode == ReefscapeRobotMode.Coral && !hasCoral);
                     break;
                 case ReefscapeSetpoints.Place:
@@ -189,21 +197,46 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
             UpdateSetpoints();
 
         }
-        private float _hoverTransitionHeight=22;
+        private float _hoverTransitionHeight = 22;
         private float _armHoverAngle = 160;
-        private float _hoverHeight=16;
+        private float _hoverHeight = 16;
 
-        private IEnumerator NightHawksHoverSequence()
+        private IEnumerator NightHawksHoverSequence() //gets coral from station intake
         {
             if (IntakeAction.IsPressed() && StationMode == true)
             {
                 _elevatorTargetHeight = _hoverTransitionHeight;
                 yield return new WaitForSeconds(0.5f);
                 _armTargetAngle = _armHoverAngle;
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(1.0f);
                 _elevatorTargetHeight = _hoverHeight;
             }
         }
+        private bool left;
+        private void AutoAlignOffsets()
+        {
+            if (!AutoAlignLeftAction.IsPressed() && !AutoAlignRightAction.IsPressed())
+            {
+                preAligned = false;
+            }
+
+            float leftAlign = -0.75f;
+            float rightAlign = -1.25f;
+
+
+            if (AutoAlignLeftAction.IsPressed())
+            {
+                left = true;
+            }
+            else if (AutoAlignRightAction.IsPressed())
+            {
+                left = false;
+            }
+
+            float xOffset = left ? leftAlign : rightAlign;
+            align.offset = new Vector3(xOffset, 0, 3.5f);
+        }
+
         private void PlacePiece()
         {
             if (CurrentRobotMode == ReefscapeRobotMode.Algae)

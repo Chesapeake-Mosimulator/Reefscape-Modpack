@@ -10,9 +10,9 @@ In order from lowest team number to highest
 - 4638
 ### In development
 - 614
+- 686
 - 1086
 ### Planned
-- 686
 - 836
 ### Considering
 - 449

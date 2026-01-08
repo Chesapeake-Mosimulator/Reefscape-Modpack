@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: 9162ef73a8b7ff14a81079bd59987bc0
   m_currentHash:
     serializedVersion: 2
-    Hash: 78d414bc802d0bd74944fffbc685332d
+    Hash: b693b48d496bc39955c44d42663208ba
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_BundleLocalCatalog: 0
@@ -65,6 +65,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9cd31e1fc2fdeb84fbde0fabd689577f, type: 2}
   - {fileID: 11400000, guid: f5b71b85a798d6f40bb1c3812901e71f, type: 2}
   - {fileID: 11400000, guid: aac5dc43f207f464cbe5c74a47d73199, type: 2}
+  - {fileID: 11400000, guid: d174bd98777b51b45931da5aff7638aa, type: 2}
   m_BuildSettings:
     m_LogResourceManagerExceptions: 1
     m_BundleBuildPath: Temp/com.unity.addressables/AssetBundles
@@ -78,6 +79,8 @@ MonoBehaviour:
         m_Value: 'http://[PrivateIpAddress]:[HostingServicePort]'
       - m_Id: 09b0b24e528b599428cd44c5db541c03
         m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
+      - m_Id: 10c200dde1419574bbd01a9090af3be4
+        m_Value: '{UnityEngine.Application.dataPath}/../Mods/NightHawksCHSMod'
       - m_Id: 37e529e86860a7741a1cf0fcf45e094b
         m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
       - m_Id: 3995af1f76783674a86b8f7323c5f71e
@@ -86,6 +89,8 @@ MonoBehaviour:
         m_Value: 'ServerData/[BuildTarget]'
       - m_Id: 6ae011911ed4dff4eb609933b6caac2a
         m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+      - m_Id: 93138f05ef39d854eacbca4b17ab25c7
+        m_Value: '{UnityEngine.Application.persistentDataPath}/Mods/NightHawksCHSMod'
       - m_Id: a2842c0f9ded8a54d9ba8ec693eb3bcc
         m_Value: '{UnityEngine.Application.dataPath}/../Mods/Packed Assets'
       - m_Id: c65595e78f4c7db44a4324f2e84106be
@@ -99,6 +104,9 @@ MonoBehaviour:
     - m_Id: 09b0b24e528b599428cd44c5db541c03
       m_Name: BuildTarget
       m_InlineUsage: 0
+    - m_Id: 10c200dde1419574bbd01a9090af3be4
+      m_Name: NightHawksCHSMod_BuildPath
+      m_InlineUsage: 0
     - m_Id: 37e529e86860a7741a1cf0fcf45e094b
       m_Name: Local.BuildPath
       m_InlineUsage: 0
@@ -110,6 +118,9 @@ MonoBehaviour:
       m_InlineUsage: 0
     - m_Id: 6ae011911ed4dff4eb609933b6caac2a
       m_Name: Local.LoadPath
+      m_InlineUsage: 0
+    - m_Id: 93138f05ef39d854eacbca4b17ab25c7
+      m_Name: NightHawksCHSMod_LoadPath
       m_InlineUsage: 0
     - m_Id: a2842c0f9ded8a54d9ba8ec693eb3bcc
       m_Name: Packed Assets_BuildPath

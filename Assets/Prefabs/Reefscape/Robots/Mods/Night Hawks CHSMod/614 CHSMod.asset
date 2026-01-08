@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   modpackName: CHSMod
   modpackVersion: 1.0.0
-  authorName: 
+  authorName: Madison|614
   description: 
   robots:
   - {fileID: 11400000, guid: 1de5afbcac8300f408ec352c9acc1760, type: 2}

@@ -3,6 +3,7 @@ using System.Collections;
 using Games.Reefscape.Enums;
 using Games.Reefscape.GamePieceSystem;
 using Games.Reefscape.Robots;
+using Games.Reefscape.FieldScripts;
 using MoSimCore.BaseClasses.GameManagement;
 using MoSimCore.Enums;
 using MoSimLib;
@@ -31,8 +32,10 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
         [Header("Physics Rollers")]
         [SerializeField] private GenericRoller[] canalRollers;
         [SerializeField] private GenericRoller[] EndEffectorRollers;
+        [SerializeField] private GenericRoller[] FrontIntakeRollers;
+        [SerializeField] private GenericRoller[] BackIntakeRollers;
         private float EEv4PunchVelocity = 6000f;
-        private float CanalIntakeVelocity;
+        private float CanalIntakeVelocity = 4000f;
 
         [Header("PIDS")]
         [SerializeField] private PidConstants ArmPid;
@@ -61,7 +64,7 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
         [SerializeField] private GamePieceState endEffectorCoralStowState;
         [SerializeField] private GamePieceState endEffectorCoralIntakeState;
         [SerializeField] private GamePieceState algaeStowState;
-        [SerializeField] private GamePieceState algaePunch;
+        [SerializeField] private GamePieceState IntakeCoral;
 
         private RobotGamePieceController<ReefscapeGamePiece, ReefscapeGamePieceData>.GamePieceControllerNode _coralController;
         private RobotGamePieceController<ReefscapeGamePiece, ReefscapeGamePieceData>.GamePieceControllerNode _algaeController;
@@ -89,19 +92,18 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
             _elevatorTargetHeight = 0;
             _armTargetAngle = 0;
             _intakeTargetAngle = 0;
-            //_hoverTransitionHeight = hoverTransitionHeightTest;
-            //_hoverHeight=hoverTestHeight;
 
 
             RobotGamePieceController.SetPreload(endEffectorCoralStowState);
             _coralController = RobotGamePieceController.GetPieceByName(ReefscapeGamePieceType.Coral.ToString());
             _algaeController = RobotGamePieceController.GetPieceByName(ReefscapeGamePieceType.Algae.ToString());
 
-            _coralController.gamePieceStates = new[] { endEffectorCoralStowState, endEffectorCoralIntakeState };
+            _coralController.gamePieceStates = new[] { endEffectorCoralStowState, endEffectorCoralIntakeState, IntakeCoral };
             _coralController.intakes.Add(endEffectorCoralIntake);
             _coralController.intakes.Add(intakeCoralIntake);
 
             _algaeController.gamePieceStates = new[] { algaeStowState };
+            _algaeController.intakes.Add(intakeAlgaeIntake);
             //_algaeController.intakes.Add(algaePunch);
 
             StationMode = true;
@@ -121,13 +123,19 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
         {
 
 
-           AutoAlignOffsets();
+            AutoAlignOffsets();
+            CheckStationMode();
 
             bool hasAlgae = _algaeController.HasPiece();
             bool hasCoral = _coralController.HasPiece();
 
-            _algaeController.SetTargetState(algaeStowState);
-            _coralController.SetTargetState(endEffectorCoralStowState);
+            bool hoverPressed = IntakeAction.IsPressed();
+            bool hoverJustPressed = hoverPressed && !_hoverButtonLastFrame;
+
+            //_algaeController.SetTargetState(algaeStowState);
+            //_coralController.SetTargetState(endEffectorCoralStowState);
+
+
 
             bool isPunchingAlgae = IntakeAction.IsPressed() && (CurrentSetpoint == ReefscapeSetpoints.LowAlgae || CurrentSetpoint == ReefscapeSetpoints.HighAlgae);
 
@@ -145,7 +153,7 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
             {
                 foreach (var canalRoller in canalRollers) //need a new canal field bc it interferes with the punch roller and causes the arm to wig out
                 {
-                    canalRoller.ChangeAngularVelocity(rollerTestVelocity);
+                    canalRoller.ChangeAngularVelocity(CanalIntakeVelocity);
                 }
             }
             else
@@ -155,18 +163,69 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
                     canalRoller.ChangeAngularVelocity(0);
                 }
             }
+
+            bool isGroundIntaking = IntakeAction.IsPressed() && CurrentSetpoint == ReefscapeSetpoints.Intake && StationMode == false;
+            if (isGroundIntaking)
+            {
+                foreach (var intakeRoller in FrontIntakeRollers)
+                {
+                    intakeRoller.ChangeAngularVelocity(rollerTestVelocity);
+                }
+                foreach (var backintakeroller in BackIntakeRollers)
+                {
+                    backintakeroller.ChangeAngularVelocity(-rollerTestVelocity);
+                }
+            }
+            /*else
+            {
+                foreach (var intakeRoller in IntakeRollers)
+                {
+                    intakeRoller.ChangeAngularVelocity(0);
+                }
+            } */
             switch (CurrentSetpoint)
             {
                 case ReefscapeSetpoints.Stow:
                     SetSetpoint(stow);
                     break;
                 case ReefscapeSetpoints.Intake:
-                    //StartCoroutine(NightHawksHoverSequence());
-                    SetSetpoint(hover);
-                    _coralController.RequestIntake(endEffectorCoralIntake, CurrentRobotMode == ReefscapeRobotMode.Coral && !hasCoral);
+
+                    if (CurrentRobotMode == ReefscapeRobotMode.Coral && StationMode == true)
+                    {
+                        if (hoverJustPressed)
+                        {
+                            StartCoroutine(NightHawksHoverSequence());
+                            /*if (hasCoral = true)
+                            {
+                                StartCoroutine(ReverseHover());
+                            }*/
+                        }
+                        //SetSetpoint(hover);
+                        if (!hasCoral)
+                        {
+                            _coralController.SetTargetState(endEffectorCoralIntakeState);
+                            _coralController.RequestIntake(endEffectorCoralIntake, IntakeAction.IsPressed());
+                        }
+                    }
+                    else if (CurrentRobotMode == ReefscapeRobotMode.Coral && StationMode == false)
+                    {
+                        SetSetpoint(intakeGroundCoral);
+                        if (!hasCoral)
+                        {
+                            _coralController.SetTargetState(IntakeCoral);
+                            _coralController.RequestIntake(intakeCoralIntake, IntakeAction.IsPressed());
+                        }
+                    }
+                    else if (CurrentRobotMode == ReefscapeRobotMode.Algae)
+                    {
+                        SetSetpoint(intakeGroundAlgae);
+                        // _algaeController.SetTargetState(algaeStowState);
+                        //_algaeController.RequestIntake(intakeAlgaeIntake, CurrentRobotMode == ReefscapeRobotMode.Algae && !hasAlgae);
+                    }
                     break;
                 case ReefscapeSetpoints.Place:
                     PlacePiece();
+                    //StartCoroutine(PlaceSequence());
                     break;
                 case ReefscapeSetpoints.L1:
                     SetSetpoint(groundL1);
@@ -195,23 +254,49 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
                     break;
             }
             UpdateSetpoints();
+            _hoverButtonLastFrame = hoverPressed;
 
         }
         private float _hoverTransitionHeight = 22;
         private float _armHoverAngle = 160;
-        private float _hoverHeight = 16;
+        private float _hoverHeight = 20;
 
-        private IEnumerator NightHawksHoverSequence() //gets coral from station intake
+        private bool _hoverSequenceRunning = false;
+        private bool _hoverButtonLastFrame = false;
+
+        private IEnumerator NightHawksHoverSequence()
         {
-            if (IntakeAction.IsPressed() && StationMode == true)
+            if (_hoverSequenceRunning) yield break;
+            _hoverSequenceRunning = true;
+
+            if (IntakeAction.IsPressed() && StationMode)
             {
                 _elevatorTargetHeight = _hoverTransitionHeight;
                 yield return new WaitForSeconds(0.5f);
                 _armTargetAngle = _armHoverAngle;
-                yield return new WaitForSeconds(1.0f);
+                yield return new WaitForSeconds(0.75f);
                 _elevatorTargetHeight = _hoverHeight;
+                yield return new WaitForSeconds(0.5f);
             }
+            _hoverSequenceRunning = false;
         }
+
+        private IEnumerator ReverseHover()
+        {
+            if (_hoverSequenceRunning) yield break;
+            _hoverSequenceRunning = true;
+
+            yield return new WaitForSeconds(0.5f);
+            _elevatorTargetHeight = _hoverTransitionHeight;
+            yield return new WaitForSeconds(1.0f);
+            _armTargetAngle = 0;
+            yield return new WaitForSeconds(0.75f);
+            _elevatorTargetHeight = 0;
+            yield return new WaitForSeconds(0.5f);
+
+            _hoverSequenceRunning = false;
+        }
+
         private bool left;
         private void AutoAlignOffsets()
         {
@@ -219,11 +304,8 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
             {
                 preAligned = false;
             }
-
             float leftAlign = -0.75f;
             float rightAlign = -1.25f;
-
-
             if (AutoAlignLeftAction.IsPressed())
             {
                 left = true;
@@ -232,23 +314,68 @@ namespace Prefabs.Reefscape.Robots.Mods.TestingMod._614
             {
                 left = false;
             }
-
             float xOffset = left ? leftAlign : rightAlign;
             align.offset = new Vector3(xOffset, 0, 3.5f);
         }
+
+        private void CheckStationMode()
+        {
+            // set mode based on intake selection**
+            if (CurrentIntakeMode == ReefscapeIntakeMode.L1)
+            {
+                StationMode = false;
+            }
+            else
+            {
+                StationMode = true;
+            }
+
+            // set drop type based on mode
+            if (StationMode)
+            {
+                CurrentCoralStationMode.DropType = DropType.Station;
+            }
+            else
+            {
+                CurrentCoralStationMode.DropType = DropType.Ground;
+            }
+        }
+
 
         private void PlacePiece()
         {
             if (CurrentRobotMode == ReefscapeRobotMode.Algae)
             {
-                _algaeController.ReleaseGamePieceWithForce(new Vector3(0, 0, 0));
+                _algaeController.ReleaseGamePieceWithForce(new Vector3(0, 0, 5));
             }
             else
-                if (CurrentRobotMode == ReefscapeRobotMode.Coral)
+                if (CurrentRobotMode == ReefscapeRobotMode.Coral && StationMode == true)
                 {
                     _coralController.ReleaseGamePieceWithForce(new Vector3(0, 0, 6));
                 }
+                else
+                    if (CurrentRobotMode == ReefscapeRobotMode.Coral && StationMode == false)
+                    {
+                        _coralController.ReleaseGamePieceWithForce(new Vector3(6, 0, 0));
+                        if (CurrentIntakeMode == ReefscapeIntakeMode.L1)
+                        {
+                            foreach (var Intakeroller in FrontIntakeRollers)
+                            {
+                                Intakeroller.flipVelocity();
+                            }
+                            foreach (var backintakeroller in BackIntakeRollers)
+                            {
+                                backintakeroller.flipVelocity();
+                            }
+                        }
+                    }
+        }
 
+        private IEnumerator PlaceSequence()
+        {
+            PlacePiece();
+            yield return new WaitForSeconds(0.25f);
+            SetSetpoint(stow);
         }
 
         private void SetSetpoint(NightHawksSetpoint setpoint)

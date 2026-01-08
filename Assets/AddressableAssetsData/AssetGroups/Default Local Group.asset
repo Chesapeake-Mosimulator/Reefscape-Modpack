@@ -21,6 +21,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - robot_metadata
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7b61d2baf642ce949b8fcbc4753d0af7
+    m_Address: Assets/Prefabs/Reefscape/Robots/Mods/Night Hawks CHSMod/614 2025 Logo.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - modpack_metadata
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d8c517fc6a2ca234299cfa7b3733fec5
     m_Address: Robots/2910
     m_ReadOnly: 0
